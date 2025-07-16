@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: iagro-postgres-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - iagro_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.0
+    container_name: iagro-keycloak
+    command: start-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    depends_on:
+      - postgres-db
+    networks:
+      - iagro_network
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: iagro-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+      - keycloak
+    networks:
+      - iagro_network
+
+  nginx:
+    image: nginx:1.29.0
+    container_name: iagro-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - keycloak
+      - api
+    networks:
+      - iagro_network
+
+volumes:
+  postgres_data:
+  keycloak_data:
+
+networks:
+  iagro_network:
+    driver: bridge
