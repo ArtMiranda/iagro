@@ -40,6 +40,20 @@ services:
     networks:
       - iagro_network
 
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: iagro-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - api
+      - keycloak
+    networks:
+      - iagro_network
+
   nginx:
     image: nginx:1.29.0
     container_name: iagro-nginx
@@ -53,6 +67,7 @@ services:
     depends_on:
       - keycloak
       - api
+      - web
     networks:
       - iagro_network
 
