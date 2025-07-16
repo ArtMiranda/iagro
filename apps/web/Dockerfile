@@ -14,6 +14,6 @@ COPY . .
 
 RUN npx nx build web
 
-EXPOSE 4200
+EXPOSE 3000
 
 CMD ["npx", "nx", "start", "web"]
